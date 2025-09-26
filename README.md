@@ -54,3 +54,18 @@ print(f"Инициалы: {initials}.")
 print(f"Длина (символов): {len(full_names)}")
 ```
 ![Картинка 1](./images/lab01/05.png)
+
+### Задание 6
+```python
+n = int(input())
+countt = 0  
+countf = 0   
+for _ in range(n):
+    dan = input().split()
+    if dan[3] == "True":
+        countt += 1
+    else:
+        countf += 1
+print(countt, countf)
+```
+![Картинка 1](./images/lab01/06.png)
