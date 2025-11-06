@@ -556,7 +556,7 @@ if args.command == "csv2xlsx":
     print("Выполнено")
 ```
 ![Картинка 1](./images/lab06/cli_convert_csv2xlsx.png)
-
+![Картинка 1](./images/lab06/1.png)
 ![Картинка 1](./images/lab06/cli_convert_csv2json.png)
 ![Картинка 1](./images/lab06/2.png)
 ![Картинка 1](./images/lab06/cli_convert_json2csv.png)
