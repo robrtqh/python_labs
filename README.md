@@ -472,3 +472,92 @@ csv_to_xlsx('data/lab05/samples/example2.csv', 'data/lab05/out/example3_csv.xlsx
 ```
 ![Картинка 1](./images/lab05/samples2.png)
 ![Картинка 1](./images/lab05/out3.png)
+
+# Лабораторная работа №6
+
+### Задание cli_text
+```python
+import  argparse # для парсинга аргументов командной строки
+from src.lib.text import *
+
+def cat(text, n):
+    f = open(text, "r").readlines()  # открываем файл и читаем все строки в список
+    if not n:                        # если флаг -n НЕ установлен
+        for i in f:                  # проходим по всем строкам
+            print(i.replace("\n", ""))  # выводим строку без символа новой строки
+    else:                            # если флаг -n установлен
+        f = enumerate(f)             # нумеруем строки (индекс, строка)
+        for i in f:                  # проходим по пронумерованным строкам
+            print(i[0],i[1].replace("\n", ""))  # выводим номер и строку
+
+def stats(txt,n):
+    f = open(txt, "r").read()        # читаем весь файл как одну строку
+    txt = top_n(count_freq(tokenize(normalize(f))),n)  # цепочка обработки текста
+    for a in txt:                    # проходим по результату
+        print(a[1],a[0])             # выводим частоту и слово
+
+parser = argparse.ArgumentParser("CLI‑утилиты лабораторной №6") # создаем главный парсер
+subparsers = parser.add_subparsers(dest="command") # добавляем подпарсеры для команд
+
+cat_parser = subparsers.add_parser("cat",help = "Вывести содержимое файла")  # создаем парсер для cat
+cat_parser.add_argument("--input",required = True)  # обязательный аргумент --input
+cat_parser.add_argument("-n", action="store_true",help = "Нумировать строки")  # флаг -n (нумерация строк)
+
+stats_parser = subparsers.add_parser("stats",help = "Частоты слез")  # создаем парсер для stats
+stats_parser.add_argument("--input",required = True) 
+stats_parser.add_argument("--top",type = int, default = 5)  # аргумент --top (по умолчанию 5)
+
+args = parser.parse_args()  # парсим аргументы командной строки
+
+if args.command == "cat":  
+    cat(args.input,args.n)  # вызываем функцию cat с файлом и флагом -n
+
+if args.command == "stats": 
+    stats(args.input,args.top)  # вызываем функцию stats с файлом и числом top
+```
+![Картинка 1](./images/lab06/cli_text_cat.png)
+![Картинка 1](./images/lab06/cli_text_stats.png)
+
+### Задание cli_convert
+```python
+import argparse
+from src.lab05.csv_xlsx import csv_to_xlsx
+from src.lab05.json_csv import json_to_csv, csv_to_json
+
+parser = argparse.ArgumentParser("CLI‑утилиты лабораторной №6") # создаем главный парсер 
+subparsers = parser.add_subparsers(dest="command") # добавляем подпарсеры для разных команд. 
+# dest="command" сохраняет выбранную команду в args.command
+
+json2csv_parser = subparsers.add_parser("json2csv")  # создаем подпарсер
+json2csv_parser.add_argument("--in", required=True, dest='input')  # добавляем обязательный аргумент --in
+# dest='input' переименовывает его в args.input
+json2csv_parser.add_argument("--out", required=True)  # добавляем обязательный аргумент --out для выходного файла
+
+csv2json_parser = subparsers.add_parser("csv2json")
+csv2json_parser.add_argument("--in",required=True,dest='input')  # обязательный входной файл (--in → args.input)
+csv2json_parser.add_argument("--out",required=True) # обязательный выходной файл
+
+csv2xlsx_parser = subparsers.add_parser("csv2xlsx")
+csv2xlsx_parser.add_argument("--in",required=True,dest='input') # входной файл CSV
+csv2xlsx_parser.add_argument("--out",required=True) # выходной файл XLSX
+
+args = parser.parse_args() # парсим аргументы командной строки, переданные при запуске программы
+
+if args.command == "json2csv":
+    json_to_csv(args.input,args.out)
+    print("Выполнено")
+
+if args.command == "csv2json":
+    csv_to_json(args.input,args.out)
+    print("Выполнено")
+
+if args.command == "csv2xlsx":
+    csv_to_xlsx(args.input,args.out)
+    print("Выполнено")
+```
+![Картинка 1](./images/lab06/cli_convert_csv2xlsx.png)
+
+![Картинка 1](./images/lab06/cli_convert_csv2json.png)
+![Картинка 1](./images/lab06/2.png)
+![Картинка 1](./images/lab06/cli_convert_json2csv.png)
+![Картинка 1](./images/lab06/3.png)
