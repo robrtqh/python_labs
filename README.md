@@ -711,3 +711,72 @@ def test_round_trip(tmp_path): #проверяем конвертацию туд
 
 ### Задание C
 ![Картинка 1](./images/lab07/C.png)
+
+# Лабораторная работа №8
+
+### Задание A
+```python
+from dataclasses import dataclass # Импорт декоратора для автоматического создания методов класса
+from datetime import datetime, date # Импорт классов для работы с датами
+@dataclass # Декоратор, который автоматически создает конструктор __init__ и другие методы
+class Student:
+    fio: str
+    birthdate: str
+    group: str
+    gpa: float
+    def __post_init__(self): # Метод, который выполняется после конструктора __init__
+        try:
+            datetime.strptime(self.birthdate, "%Y-%m-%d") # Пытаемся преобразовать строку в дату по указанному формату
+        except ValueError:
+            raise ValueError # Если не получается - выбрасываем ошибку
+        if not (0 <= self.gpa <= 5): # Проверка диапазона среднего баллаа
+            raise ValueError
+    def age(self) -> int: # Метод для вычисления возраста студента
+        birth_date = datetime.strptime(self.birthdate, "%Y-%m-%d").date() # Преобразуем строку с датой рождения в объект date
+        today = date.today() # Получаем текущую дату
+        age = today.year - birth_date.year # Вычисляем разницу в годах
+        if today.month < birth_date.month or (today.month == birth_date.month and today.day < birth_date.day): # Корректируем возраст, если день рождения в этом году еще не наступил
+            age -= 1
+        return age
+    def to_dict(self) -> dict: # Метод для преобразования объекта в словарь (сериализация)
+        return {
+            "fio": self.fio,
+            "birthdate": self.birthdate,
+            "group": self.group,
+            "gpa": self.gpa
+        }
+    @classmethod # Метод класса для создания объекта из словаря (десериализация)
+    def from_dict(cls, data: dict): # Создаем новый объект класса, передавая значения из словаря
+        return cls(
+            fio=data["fio"],
+            birthdate=data["birthdate"],
+            group=data["group"],
+            gpa=data["gpa"]
+        )
+    def __str__(self): # Метод для строкового представления объекта
+        return f"Студент: {self.fio}, Группа: {self.group}, GPA: {self.gpa}, Возраст: {self.age()} лет"
+```
+
+### Задание B
+```python
+import json
+import os
+from .models import Student
+def students_to_json(students: list[Student], path: str): # Функция для сохранения списка студентов в JSON файл
+    data = [student.to_dict() for student in students] # Преобразуем каждый объект Student в словарь с помощью метода to_dict()
+    os.makedirs(os.path.dirname(path), exist_ok=True) # Создаем папки по указанному пути, если они не существуют, exist_ok=True означает, что не будет ошибки если папка уже существует
+    with open(path, 'w', encoding='utf-8') as f: # Открываем файл для записи
+        json.dump(data, f, ensure_ascii=False, indent=2) # ensure_ascii=False - разрешаем кириллицу, indent=2 - красивое форматирование с отступами
+def students_from_json(path: str) -> list[Student]: # Функция для загрузки списка студентов из JSON файла
+    with open(path, 'r', encoding='utf-8') as f: # Открываем файл для чтения
+        data = json.load(f) # Загружаем данные из JSON файла в переменную data
+    students = []
+    for item in data:
+        student = Student.from_dict(item) # Создаем объект Student из словаря с помощью метода from_dict()
+        students.append(student) 
+    return students
+```
+
+![Картинка 1](./images/lab08/01.png)
+![Картинка 1](./images/lab08/02.png)
+![Картинка 1](./images/lab08/03.png)
