@@ -780,3 +780,213 @@ def students_from_json(path: str) -> list[Student]: # Функция для за
 ![Картинка 1](./images/lab08/01.png)
 ![Картинка 1](./images/lab08/02.png)
 ![Картинка 1](./images/lab08/03.png)
+
+# Лабораторная работа №9
+
+### Код
+```python
+import csv
+from pathlib import Path
+from typing import List
+from datetime import datetime
+
+class Group:
+    def __init__(self, storage_path: str): #storage_path - строка с путем к CSV файлу
+        self.path = Path(storage_path)
+    def _read_csv_rows(self) -> List[dict]: #Объявление приватного метода (начинается с _) для чтения данных из CSV
+        rows = []
+        try:
+            with open(self.path, 'r', encoding='utf-8') as f: #Открытие файла в режиме чтения ('r') с кодировкой UTF-8
+                reader = csv.DictReader(f) #Создание объекта DictReader для чтения CSV
+                rows = list(reader)
+        except FileNotFoundError:
+            pass
+        return rows
+    def _write_csv_rows(self, rows: List[dict]): #Объявление приватного метода для записи данных в CSV, принимает список словарей
+        with open(self.path, 'w', encoding='utf-8', newline='') as f: #Открытие файла в режиме записи ('w')
+            writer = csv.DictWriter(f, fieldnames=['fio', 'birthdate', 'group', 'gpa']) #Создание объекта DictWriter для записи словарей в CSV
+            writer.writeheader()
+            writer.writerows(rows)
+    def list(self) -> List[dict]: #Объявление публичного метода для получения всех студентов
+        return self._read_csv_rows() 
+    def add(self, student_data: dict): #Объявление метода для добавления нового студента
+        rows = self._read_csv_rows() #Чтение всех текущих строк из файла
+        for row in rows:
+            if row['fio'] == student_data['fio']:
+                return  
+        rows.append(student_data)
+        self._write_csv_rows(rows)
+    def find(self, substr: str) -> List[dict]: #Объявление метода для поиска студентов, принимает подстроку для поиска
+        rows = self._read_csv_rows()
+        found = []
+        for row in rows:
+            if substr.lower() in row['fio'].lower(): #Проверка, содержится ли искомая подстрока (в нижнем регистре) в ФИО студента
+                found.append(row)
+        return found
+    def stats(self) -> dict: #Объявление метода для получения статистики, возвращает словарь
+        rows = self._read_csv_rows()
+        if not rows:
+            return {"total": 0, "avg_gpa": 0, "groups": {}} #Если студентов нет, возвращаем словарь с нулевыми значениями
+        total_gpa = 0
+        groups_count = {}
+        for row in rows:
+            try:
+                total_gpa += float(row['gpa']) #Преобразование GPA из строки в число с плавающей точкой и добавление к общей сумме
+                group_name = row['group']
+                if group_name in groups_count:
+                    groups_count[group_name] += 1
+                else:
+                    groups_count[group_name] = 1
+            except:
+                continue
+        avg_gpa = total_gpa / len(rows) #Вычисление среднего GPA: сумма GPA / количество студентов
+        return {
+            "total": len(rows),
+            "avg_gpa": avg_gpa,
+            "groups": groups_count
+        }
+    def remove(self, fio: str): #Объявление метода для удаления студента по ФИО
+        rows = self._read_csv_rows()
+        new_rows = [row for row in rows if row['fio'] != fio] #Создание нового списка строк, исключая студента с указанным ФИО
+        if len(new_rows) < len(rows):
+            self._write_csv_rows(new_rows)
+            return True
+        return False
+    def update(self, fio: str, **fields): #Объявление метода для обновления данных студента
+        rows = self._read_csv_rows()
+        updated = False #Флаг, указывающий было ли обновление
+        for row in rows:
+            if row['fio'] == fio:
+                for key, value in fields.items(): #Цикл по всем переданным полям для обновления
+                    if key in row:
+                        row[key] = value
+                updated = True #Установка флага обновления в True
+                break
+        if updated:
+            self._write_csv_rows(rows)
+        return updated
+```
+
+![Картинка 1](./images/lab09/1.png)
+### Было
+![Картинка 1](./images/lab09/2.png)
+### Стало
+![Картинка 1](./images/lab09/3.png)
+
+# Лабораторная работа №10
+
+### structures.py
+```python
+from collections import deque #deque нужен для эффективной реализации очереди
+
+class Stack: #Стек — структура данных LIFO
+    def __init__(self):
+        self._data = [] #_data — приватный атрибут
+    def push(self, item): #push — добавляет элемент на вершину стека
+        self._data.append(item) #добавляет элемент в конец списка
+    def pop(self):
+        if self.is_empty():
+            raise IndexError
+        return self._data.pop() #удаляет последний элемент списка и возвращает его
+    def peek(self): #смотрит верхний элемент без удаления
+        if self.is_empty():
+            return None
+        return self._data[-1] #обращение к последнему элементу списка
+    def is_empty(self):
+        return len(self._data) == 0
+    def __len__(self): #вызывается при использовании len(obj)
+        return len(self._data)
+    def __str__(self): #при преобразовании объекта в строку
+        return f"Stack({self._data})" #Возвращает строку вида Stack([элементы])
+
+class Queue: #Очередь — структура данных FIFO
+    def __init__(self):
+        self._data = deque() #создаёт пустую двустороннюю очередь
+    def enqueue(self, item): #добавляет элемент в конец очереди
+        self._data.append(item) #добавляет элемент в правый конец deque
+    def dequeue(self): #удаляет и возвращает элемент из начала очереди
+        if self.is_empty():
+            raise IndexError
+        return self._data.popleft() # удаляет элемент с левого конца deque
+    def peek(self): 
+        if self.is_empty():
+            return None
+        return self._data[0] #обращение к первому элементу deque
+    def is_empty(self):
+        return len(self._data) == 0
+    def __len__(self):
+        return len(self._data)
+    def __str__(self): #Преобразует deque в список для красивого отображения
+        return f"Queue({list(self._data)})"
+
+if __name__ == "__main__":
+    s = Stack() #Демонстрация стека
+    s.push(10)
+    s.push(20)
+    s.push(30)
+    print(s)
+    print(f"peek: {s.peek()}")
+    print(f"pop: {s.pop()}")
+    print(s)
+    print() 
+    q = Queue() #Демонстрация очереди
+    q.enqueue("A")
+    q.enqueue("B")
+    q.enqueue("C")
+    print(q)
+    print(f"peek: {q.peek()}")
+    print(f"dequeue: {q.dequeue()}")
+    print(q)
+```
+
+### linked_list.py
+```python
+from typing import Any, Optional #Any — любой тип данных, Optional — может быть указанного типа или None
+
+class Node: #Node для узла односвязного списка
+    def __init__(self, value: Any, next_node: Optional['Node'] = None): #'Node' — форвард-декларация
+        self.value = value #сохраняет значение в атрибуте узла
+        self.next = next_node #сохраняет ссылку на следующий узел
+    def __str__(self) -> str:
+        return f"[{self.value}]" #Возвращает строку в формате [значение]
+
+class SinglyLinkedList: #Создаёт класс для односвязного списка
+    def __init__(self):
+        self.head: Optional[Node] = None #ссылка на первый узел списка
+        self.tail: Optional[Node] = None #ссылка на последний узел списка
+        self._size: int = 0 #счётчик количества элементов
+    def append(self, value: Any) -> None:
+        new_node = Node(value)
+        if self.head is None:
+            self.head = self.tail = new_node #если список пуст, новый узел становится и головой, и хвостом
+        else:
+            self.tail.next = new_node #текущий хвостовой узел ссылается на новый узел
+            self.tail = new_node #новый узел становится новым хвостом
+        self._size += 1
+    def __str__(self) -> str:
+        nodes = []
+        current = self.head #начинаем с головы списка
+        while current is not None:
+            nodes.append(str(current)) #добавляем строковое представление текущего узла
+            current = current.next
+        nodes.append("None") #добавляем "None" в конец
+        return " -> ".join(nodes) 
+    def __repr__(self) -> str: #Метод repr для отладки и понятного представления объекта
+        values = []
+        current = self.head
+        while current is not None:
+            values.append(current.value)
+            current = current.next
+        return f"SinglyLinkedList({values})"
+    def __len__(self) -> int: 
+        return self._size #Возвращает значение счётчика _size
+
+if __name__ == "__main__":
+    lst = SinglyLinkedList() #создаёт пустой односвязный список
+    lst.append(6)
+    lst.append(1)
+    lst.append(1.5)
+    print(str(lst))
+```
+
+![Картинка 1](./images/lab10/1.png)
